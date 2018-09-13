@@ -10,17 +10,21 @@
 })(this, function() {
   'use strict';
 
+  var PENDING = 'PENDING',
+    FULFILLED = 'FULFILLED',
+    REJECTED = 'REJECTED';
+
   var final = function(status, value) {
     var me = this,
       fn,
       st,
       queue;
 
-    if (me._status !== 'PENDING') return;
+    if (me._status !== PENDING) return;
 
     setTimeout(function() {
       me._status = status;
-      st = me._status === 'FULFILLED';
+      st = me._status === FULFILLED;
       queue = me[st ? '_resolves' : '_rejects'];
 
       while (fn = queue.shift()) {
@@ -49,11 +53,11 @@
     me._rejects = [];
 
     var resolve = function(value) {
-      final.apply(me, ['FULFILLED'].concat([value]));
+      final.apply(me, [FULFILLED, value]);
     }
 
     var reject = function(reason) {
-      final.apply(promise, ['FULFILLED'].concat([value]));
+      final.apply(promise, [REJECTED, value]);
     }
 
     resolver(resolve, reject);
@@ -84,12 +88,12 @@
         reject(reason);
       }
 
-      if (me._status === 'PENDING') {
+      if (me._status === PENDING) {
         me._resolves.push(handle);
         me._rejects.push(errback);
-      } else if (me._status === 'FULFILLED') { // 状态发生变化，立即执行
+      } else if (me._status === FULFILLED) { // 状态发生变化，立即执行
         resolve(value);
-      } else if (me._status === 'REJECTED') {
+      } else if (me._status === REJECTED) {
         errback(me._reason);
       }
 
@@ -122,7 +126,7 @@
 
   Promise.all = function(promises) {
     if (!Array.isArray(promises)) {
-      throw new TypeError('you must pass an array to all');
+      throw new TypeError('it require an array to all');
     }
 
     return new Promise(function(resolve, reject) {
